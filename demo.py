@@ -1,7 +1,5 @@
 
 
-
-
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -13,15 +11,33 @@ from sklearn.preprocessing import LabelEncoder
 import plotly.express as px
 
 # Load Data
+# def load_data(file):
+#     """
+#     Load the dataset from the uploaded file.
+#     """
+#     try:
+#         if file.name.endswith('.csv'):
+#             data = pd.read_csv(file)
+#         elif file.name.endswith('.xlsx') or file.name.endswith('.xls'):
+#             data = pd.read_excel(file, engine='openpyxl')
+#         else:
+#             st.error("Unsupported file format. Please upload a CSV or Excel file.")
+#             return None
+#         return data
+#     except Exception as e:
+#         st.error(f"Error loading data: {e}")
+#         return None
+
 def load_data(file):
     """
     Load the dataset from the uploaded file.
     """
     try:
-        if file.name.endswith('.csv'):
+        # Check if the file is actually a CSV
+        if file.name.endswith('.csv') or 'csv' in file.name.lower():
             data = pd.read_csv(file)
-        elif file.name.endswith('.xlsx') or file.name.endswith('.xls'):
-            data = pd.read_excel(file)
+        elif file.name.endswith('.xlsx') or file.name.endswith('.xls') or 'excel' in file.name.lower():
+            data = pd.read_excel(file, engine='openpyxl')
         else:
             st.error("Unsupported file format. Please upload a CSV or Excel file.")
             return None
@@ -29,6 +45,7 @@ def load_data(file):
     except Exception as e:
         st.error(f"Error loading data: {e}")
         return None
+
 
 # Initialize Hugging Face GPT-2 Model
 def initialize_gpt2():
@@ -75,10 +92,35 @@ def generate_analysis_plan(data, model, tokenizer):
         return "Analysis plan generation running successfully ."
 
 # Identify Important Features
+# def identify_important_features(data, target_col):
+#     """
+#     Identify important features using RandomForest for the target column.
+#     """
+#     X = data.drop(columns=[target_col])
+#     y = data[target_col]
+
+#     # Encode categorical columns
+#     X_encoded = X.apply(lambda col: LabelEncoder().fit_transform(col.astype(str)) if col.dtype == 'object' else col)
+
+#     if y.dtype in ['int64', 'float64']:
+#         model = RandomForestRegressor()
+#     else:
+#         y = LabelEncoder().fit_transform(y)
+#         model = RandomForestClassifier()
+
+#     model.fit(X_encoded, y)
+#     importance = model.feature_importances_
+#     feature_importance = pd.DataFrame({'Feature': X.columns, 'Importance': importance})
+#     feature_importance = feature_importance.sort_values(by='Importance', ascending=False)
+#     return feature_importance
+
 def identify_important_features(data, target_col):
     """
     Identify important features using RandomForest for the target column.
     """
+    # Drop rows with missing values in the target column
+    data = data.dropna(subset=[target_col])
+
     X = data.drop(columns=[target_col])
     y = data[target_col]
 
@@ -96,6 +138,7 @@ def identify_important_features(data, target_col):
     feature_importance = pd.DataFrame({'Feature': X.columns, 'Importance': importance})
     feature_importance = feature_importance.sort_values(by='Importance', ascending=False)
     return feature_importance
+
 
 # Perform Analysis Dynamically
 def perform_analysis(data):
@@ -250,3 +293,4 @@ def main():
 # Run the Streamlit app
 if __name__ == "__main__":
     main()
+
